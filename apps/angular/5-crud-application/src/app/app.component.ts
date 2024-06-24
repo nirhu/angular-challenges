@@ -1,51 +1,55 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
-import { randText } from '@ngneat/falso';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ButtonLoadingOverlayDirective } from './button-loading-overlay.directive';
+import { TodoItemComponent } from './todo-item.component';
+import { TodoItem, TodoService } from './todo.service';
+
+// TODO add components store (ngRx, rxAngular)
 
 @Component({
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    MatProgressSpinnerModule,
+    TodoItemComponent,
+    ButtonLoadingOverlayDirective,
+  ],
   selector: 'app-root',
   template: `
-    <div *ngFor="let todo of todos">
-      {{ todo.title }}
-      <button (click)="update(todo)">Update</button>
-    </div>
+    @for (todo of todos(); track todo.id) {
+      <app-todo-item
+        [todo]="todo"
+        (updated)="update($event)"
+        (deleted)="delete($event)"></app-todo-item>
+    }
   `,
   styles: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit {
-  todos!: any[];
-
-  constructor(private http: HttpClient) {}
+  todoService = inject(TodoService);
+  todos = signal<TodoItem[]>([]);
 
   ngOnInit(): void {
-    this.http
-      .get<any[]>('https://jsonplaceholder.typicode.com/todos')
-      .subscribe((todos) => {
-        this.todos = todos;
-      });
+    this.todoService.getTodos().subscribe((todos) => this.todos.set(todos));
   }
 
-  update(todo: any) {
-    this.http
-      .put<any>(
-        `https://jsonplaceholder.typicode.com/todos/${todo.id}`,
-        JSON.stringify({
-          todo: todo.id,
-          title: randText(),
-          body: todo.body,
-          userId: todo.userId,
-        }),
-        {
-          headers: {
-            'Content-type': 'application/json; charset=UTF-8',
-          },
-        },
-      )
-      .subscribe((todoUpdated: any) => {
-        this.todos[todoUpdated.id - 1] = todoUpdated;
-      });
+  delete(todo: TodoItem) {
+    this.todos.update((todos) => todos.filter((t) => t.id !== todo.id));
+  }
+
+  update(todo: TodoItem) {
+    this.todos.update((todos) => {
+      const index = todos.findIndex((t) => t.id === todo.id)!;
+      todos[index] = todo;
+      return [...todos];
+    });
   }
 }
