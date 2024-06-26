@@ -1,14 +1,15 @@
 import { NgFor } from '@angular/common';
 import { Component } from '@angular/core';
+import { WrapFnPipe } from './wrap-fn.pipe';
 
 @Component({
   standalone: true,
-  imports: [NgFor],
+  imports: [NgFor, WrapFnPipe],
   selector: 'app-root',
   template: `
     <div *ngFor="let person of persons; let index = index; let isFirst = first">
-      {{ showName(person.name, index) }}
-      {{ isAllowed(person.age, isFirst) }}
+      {{ showName | wrapFn: person : index }}
+      {{ isAllowed | wrapFn: person.age : isFirst }}
     </div>
   `,
 })
@@ -19,9 +20,9 @@ export class AppComponent {
     { name: 'John', age: 30 },
   ];
 
-  showName(name: string, index: number) {
+  showName(person: { name: string; age: number }, index: number) {
     // very heavy computation
-    return `${name} - ${index}`;
+    return `${person.name} (${person.age}) - ${index}`;
   }
 
   isAllowed(age: number, isFirst: boolean) {
