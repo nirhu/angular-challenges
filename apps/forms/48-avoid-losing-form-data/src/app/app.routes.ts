@@ -10,6 +10,7 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'form',
+    canDeactivate: [(component: JoinComponent) => component.canDeactivate()],
     loadComponent: () => JoinComponent,
   },
   {
