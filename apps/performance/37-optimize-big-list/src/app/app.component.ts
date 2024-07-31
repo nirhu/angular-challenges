@@ -25,10 +25,9 @@ import { PersonListComponent } from './person-list.component';
       Load List
     </button>
 
-    <app-person-list
-      *ngIf="loadList()"
-      class="w-3/4 max-w-2xl"
-      [persons]="persons()" />
+    @if (loadList()) {
+      <app-person-list class="w-3/4 max-w-2xl" [persons]="persons()" />
+    }
   `,
   host: {
     class: 'flex items-center flex-col gap-5',
